@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keuangan Keluarga & Tugas</title>
+    
+    <!-- ==================== SECTION: CSS ==================== -->
+    <style>
+        /* --- 1. VARIABEL TEMA (Earth Tone + Gold) --- */
+        :root {
+            --bg-color: #F9F7F2;         /* Off-white earthy */
+            --card-bg: #FFFFFF;          /* Putih bersih */
+            --text-primary: #3E3B36;     /* Cokelat tua (bukan hitam pekat) */
+            --text-secondary: #6B665E;   /* Abu-cokelat */
+            --gold: #C5A028;             /* Emas elegan */
+            --gold-light: #F4E8C1;       /* Emas muda untuk background accent */
+            --green: #6B8E23;            /* Olive green (aman) */
+            --yellow: #DAA520;           /* Goldenrod (peringatan) */
+            --red: #A0522D;              /* Sienna (bahaya/over budget) */
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(62, 59, 54, 0.08);
+        }
+
+        /* --- 2. RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-primary); line-height: 1.6; padding: 20px; }
+        
+        /* --- 3. UTILITAS --- */
+        .hidden { display: none !important; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-primary { background-color: var(--gold); color: white; }
+        .btn-primary:hover { background-color: #b08d1f; }
+        .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+        .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .text-gold { color: var(--gold); }
+        .text-green { color: var(--green); }
+        .text-red { color: var(--red); }
+
+        /* --- 4. AUTH SCREEN --- */
+        #auth-screen { max-width: 400px; margin: 60px auto; text-align: center; }
+        .auth-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        
+        /* --- 5. DASHBOARD LAYOUT --- */
+        #app-screen { max-width: 600px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .month-picker { padding: 8px; border-radius: 8px; border: 1px solid var(--gold); color: var(--text-primary); font-weight: 600; }
+
+        /* Summary Cards */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .summary-card { text-align: center; padding: 16px 8px; }
+        .summary-card h3 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .summary-card .amount { font-size: 1.1rem; font-weight: 700; }
+
+        /* Quick Add */
+        .quick-presets { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
+        .preset-btn { white-space: nowrap; background: var(--gold-light); color: var(--text-primary); border: 1px solid var(--gold); }
+
+        /* To-Do List */
+        .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 15px; }
+        .tab { padding: 8px 16px; cursor: pointer; color: var(--text-secondary); font-weight: 600; }
+        .tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); margin-bottom: -2px; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .task-item.done .task-title { text-decoration: line-through; color: var(--text-secondary); }
+        .task-meta { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Budget Progress */
+        .budget-item { margin-bottom: 16px; }
+        .budget-header { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px; }
+        .progress-bar { height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 5px; transition: width 0.3s ease; }
+        .fill-green { background-color: var(--green); }
+        .fill-yellow { background-color: var(--yellow); }
+        .fill-red { background-color: var(--red); }
+
+        /* Transaction List */
+        .trx-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .trx-info { display: flex; flex-direction: column; }
+        .trx-category { font-weight: 600; font-size: 0.95rem; }
+        .trx-note { font-size: 0.8rem; color: var(--text-secondary); }
+        .trx-amount { font-weight: 700; }
+
+        /* --- 6. MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 24px; border-radius: var(--border-radius); width: 90%; max-width: 400px; }
+        .modal-content h3 { margin-bottom: 16px; color: var(--gold); }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary); }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SECTION: HTML ==================== -->
+    
+    <!-- 1. AUTH SCREEN -->
+    <div id="auth-screen" class="card">
+        <h2 class="text-gold" style="margin-bottom: 20px;">💰 Keuangan Keluarga</h2>
+        <div id="login-form">
+            <input type="email" id="login-email" class="auth-input" placeholder="Email">
+            <input type="password" id="login-password" class="auth-input" placeholder="Password">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="login()">Masuk</button>
+            <p style="margin-top: 15px; font-size: 0.9rem;">Belum punya akun? <a href="#" onclick="toggleAuth('register')" class="text-gold">Daftar di sini</a></p>
+        </div>
+        <div id="register-form" class="hidden">
+            <input type="email" id="reg-email" class="auth-input" placeholder="Email">
+            <input type="password" id="reg-password" class="auth-input" placeholder="Password (min 6 karakter)">
+            <input type="text" id="reg-household-code" class="auth-input" placeholder="Kode Household (Kosongkan jika buat baru)">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="register()">Daftar</button>
+            <p style="margin-top: 15px; font-size: 0.9rem;">Sudah punya akun? <a href="#" onclick="toggleAuth('login')" class="text-gold">Masuk di sini</a></p>
+        </div>
+    </div>
+
+    <!-- 2. APP SCREEN -->
+    <div id="app-screen" class="hidden">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h2 style="font-size: 1.2rem;">Halo, <span id="user-email-display"></span> 👋</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Kode Household: <span id="household-code-display" class="text-gold" style="font-weight: bold;"></span></p>
+            </div>
+            <div style="text-align: right;">
+                <input type="month" id="month-filter" class="month-picker" onchange="loadDashboard()">
+                <button class="btn btn-sm btn-outline" style="margin-top: 8px;" onclick="logout()">Keluar</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="card summary-card">
+                <h3>Pemasukan</h3>
+                <div class="amount text-green" id="sum-income">Rp 0</div>
+            </div>
+            <div class="card summary-card">
+                <h3>Pengeluaran</h3>
+                <div class="amount text-red" id="sum-expense">Rp 0</div>
+            </div>
+            <div class="card summary-card" style="background: var(--gold-light);">
+                <h3>Sisa / Savings</h3>
+                <div class="amount text-gold" id="sum-savings">Rp 0</div>
+            </div>
+        </div>
+
+        <!-- Quick Add -->
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">⚡ Quick Add</h3>
+            <div class="quick-presets">
+                <button class="btn btn-sm preset-btn" onclick="openModal('expense', 'Makan', 25000, 'Makan Siang')">🍛 Makan 25rb</button>
+                <button class="btn btn-sm preset-btn" onclick="openModal('expense', 'Utilitas', 50000, 'Bensin')">⛽ Bensin 50rb</button>
+                <button class="btn btn-sm preset-btn" onclick="openModal('expense', 'Sedekah', 10000, 'Sedekah Jumat')">🤲 Sedekah 10rb</button>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="openModal()">+ Tambah Transaksi Manual</button>
+        </div>
+
+        <!-- To-Do List -->
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">✅ Daftar Tugas</h3>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="task-input" class="auth-input" style="margin: 0; flex: 1;" placeholder="Tugas baru...">
+                <input type="date" id="task-date" class="auth-input" style="margin: 0; width: 130px;">
+                <button class="btn btn-primary" onclick="addTask()">Tambah</button>
+            </div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTaskTab('active')" id="tab-active">Aktif</div>
+                <div class="tab" onclick="switchTaskTab('done')" id="tab-done">Selesai</div>
+            </div>
+            <div id="task-list">
+                <!-- Task items will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Target Budgeting -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">🎯 Target Budgeting Bulan Ini</h3>
+            <div id="budget-list">
+                <!-- Budget items will be rendered here -->
+            </div>
+            <button class="btn btn-sm btn-outline" style="width: 100%; margin-top: 10px;" onclick="alert('Fitur edit budget: Ubah langsung di kode JS bagian DEFAULT_BUDGETS atau kembangkan nanti!')">Atur Ulang Target Budget</button>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">📜 Riwayat Transaksi</h3>
+            <div id="transaction-list">
+                <!-- Transactions will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Transaksi -->
+    <div id="trx-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Tambah Transaksi</h3>
+            <div class="form-group">
+                <label>Jenis</label>
+                <select id="modal-type">
+                    <option value="expense">Pengeluaran</option>
+                    <option value="income">Pemasukan</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Kategori (Khusus Pengeluaran)</label>
+                <select id="modal-category">
+                    <option value="Makan">Makan</option>
+                    <option value="Hiburan">Hiburan</option>
+                    <option value="Utilitas">Utilitas</option>
+                    <option value="Sedekah">Sedekah</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nominal (Rp)</label>
+                <input type="number" id="modal-amount" placeholder="Contoh: 25000">
+            </div>
+            <div class="form-group">
+                <label>Catatan</label>
+                <input type="text" id="modal-note" placeholder="Contoh: Makan siang di kantor">
+            </div>
+            <div class="form-group">
+                <label>Tanggal</label>
+                <input type="date" id="modal-date">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-outline" style="flex: 1;" onclick="closeModal()">Batal</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveTransaction()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SECTION: JS ==================== -->
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, setDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ⚠️ GANTI DENGAN CONFIG FIREBASE-MU DI SINI ⚠️
+        const firebaseConfig = {
+            apiKey: "GANTI_DENGAN_API_KEY_KAMU",
+            authDomain: "GANTI_DENGAN_PROJECT_ID.firebaseapp.com",
+            projectId: "GANTI_DENGAN_PROJECT_ID",
+            storageBucket: "GANTI_DENGAN_PROJECT_ID.appspot.com",
+            messagingSenderId: "GANTI_DENGAN_SENDER_ID",
+            appId: "GANTI_DENGAN_APP_ID"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State Global
+        let currentUser = null;
+        let currentHouseholdId = null;
+        let currentTaskTab = 'active';
+
+        // Default Budget per Kategori (Bisa kamu edit di sini)
+        const DEFAULT_BUDGETS = {
+            'Makan': 1000000,
+            'Hiburan': 300000,
+            'Utilitas': 500000,
+            'Sedekah': 200000
+        };
+
+        // --- FUNGSI UTILITAS ---
+        window.formatRupiah = (angka) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        };
+
+        window.toggleAuth = (view) => {
+            if (view === 'register') {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+            } else {
+                document.getElementById('register-form').classList.add('hidden');
+                document.getElementById('login-form').classList.remove('hidden');
+            }
+        };
+
+        // --- AUTHENTICATION ---
+        window.register = async () => {
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const householdCodeInput = document.getElementById('reg-household-code').value.trim().toUpperCase();
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                let householdId = '';
+
+                if (householdCodeInput) {
+                    // Join existing household
+                    const q = query(collection(db, "households"), where("code", "==", householdCodeInput));
+                    const querySnapshot = await getDocs(q);
+                    if (querySnapshot.empty) {
+                        alert("Kode Household tidak ditemukan!");
+                        await signOut(auth);
+                        return;
+                    }
+                    householdId = querySnapshot.docs[0].id;
+                } else {
+                    // Create new household
+                    const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                    const householdRef = await addDoc(collection(db, "households"), {
+                        code: newCode,
+                        createdAt: new Date().toISOString()
+                    });
+                    householdId = householdRef.id;
+                    alert(`Household dibuat! Kode kamu: ${newCode}. Bagikan ke keluarga.`);
+                }
+
+                await setDoc(doc(db, "users", user.uid), {
+                    email: email,
+                    householdId: householdId,
+                    createdAt: new Date().toISOString()
+                });
+
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        window.login = async () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                alert("Login gagal: " + error.message);
+            }
+        };
+
+        window.logout = () => signOut(auth);
+
+        // --- AUTH STATE LISTENER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    currentHouseholdId = userDoc.data().householdId;
+                    document.getElementById('user-email-display').textContent = user.email.split('@')[0];
+                    
+                    // Ambil kode household untuk ditampilkan
+                    const hhDoc = await getDoc(doc(db, "households", currentHouseholdId));
+                    if (hhDoc.exists()) {
+                        document.getElementById('household-code-display').textContent = hhDoc.data().code;
+                    }
+
+                    // Set default month to current month
+                    const today = new Date();
+                    const monthStr = today.toISOString().slice(0, 7); // YYYY-MM
+                    document.getElementById('month-filter').value = monthStr;
+
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.remove('hidden');
+                    
+                    loadDashboard();
+                }
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('app-screen').classList.add('hidden');
+            }
+        });
+
+        // --- DASHBOARD & DATA LOADING ---
+        window.loadDashboard = async () => {
+            const monthVal = document.getElementById('month-filter').value; // YYYY-MM
+            const [year, month] = monthVal.split('-');
+
+            // 1. Load Transactions
+            const trxQ = query(
+                collection(db, "transactions"),
+                where("householdId", "==", currentHouseholdId)
+            );
+            const trxSnapshot = await getDocs(trxQ);
+            let income = 0, expense = 0;
+            const trxList = [];
+
+            trxSnapshot.forEach(doc => {
+                const data = doc.data();
+                const trxDate = new Date(data.date);
+                if (trxDate.getFullYear() == year && (trxDate.getMonth() + 1) == month) {
+                    if (data.type === 'income') income += Number(data.amount);
+                    else expense += Number(data.amount);
+                    
+                    trxList.push({ id: doc.id, ...data });
+                }
+            });
+
+            // Sort transactions by date desc
+            trxList.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            document.getElementById('sum-income').textContent = formatRupiah(income);
+            document.getElementById('sum-expense').textContent = formatRupiah(expense);
+            document.getElementById('sum-savings').textContent = formatRupiah(income - expense);
+
+            renderTransactions(trxList);
+            renderBudgets(expense, trxList.filter(t => t.type === 'expense'));
+            loadTasks();
+        };
+
+        function renderTransactions(list) {
+            const container = document.getElementById('transaction-list');
+            container.innerHTML = '';
+            if (list.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color: var(--text-secondary); padding: 20px;">Belum ada transaksi bulan ini.</p>';
+                return;
+            }
+            list.forEach(trx => {
+                const isExp = trx.type === 'expense';
+                const div = document.createElement('div');
+                div.className = 'trx-item';
+                div.innerHTML = `
+                    <div class="trx-info">
+                        <span class="trx-category">${isExp ? trx.category : 'Pemasukan'}</span>
+                        <span class="trx-note">${trx.note} • ${new Date(trx.date).toLocaleDateString('id-ID')}</span>
+                    </div>
+                    <div class="trx-amount ${isExp ? 'text-red' : 'text-green'}">
+                        ${isExp ? '-' : '+'} ${formatRupiah(trx.amount)}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderBudgets(totalExpense, expenseTrxList) {
+            const container = document.getElementById('budget-list');
+            container.innerHTML = '';
+
+            // Hitung pengeluaran per kategori
+            const catSpending = {};
+            expenseTrxList.forEach(trx => {
+                catSpending[trx.category] = (catSpending[trx.category] || 0) + Number(trx.amount);
+            });
+
+            for (const [cat, limit] of Object.entries(DEFAULT_BUDGETS)) {
+                const spent = catSpending[cat] || 0;
+                const pct = Math.min((spent / limit) * 100, 100);
+                let colorClass = 'fill-green';
+                if (pct >= 100) colorClass = 'fill-red';
+                else if (pct >= 75) colorClass = 'fill-yellow';
+
+                const div = document.createElement('div');
+                div.className = 'budget-item';
+                div.innerHTML = `
+                    <div class="budget-header">
+                        <span>${cat}</span>
+                        <span>${formatRupiah(spent)} / ${formatRupiah(limit)}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${colorClass}" style="width: ${pct}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // --- QUICK ADD & MODAL ---
+        window.openModal = (type = 'expense', category = 'Makan', amount = '', note = '') => {
+            document.getElementById('trx-modal').classList.remove('hidden');
+            document.getElementById('modal-type').value = type;
+            document.getElementById('modal-category').value = category;
+            document.getElementById('modal-amount').value = amount;
+            document.getElementById('modal-note').value = note;
+            document.getElementById('modal-date').value = new Date().toISOString().split('T')[0];
+        };
+
+        window.closeModal = () => {
+            document.getElementById('trx-modal').classList.add('hidden');
+        };
+
+        window.saveTransaction = async () => {
+            const type = document.getElementById('modal-type').value;
+            const category = type === 'expense' ? document.getElementById('modal-category').value : 'Pemasukan';
+            const amount = Number(document.getElementById('modal-amount').value);
+            const note = document.getElementById('modal-note').value;
+            const date = document.getElementById('modal-date').value;
+
+            if (!amount || !date) {
+                alert("Nominal dan tanggal wajib diisi!");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "transactions"), {
+                    householdId: currentHouseholdId,
+                    type, category, amount, note, date,
+                    createdAt: new Date().toISOString()
+                });
+                closeModal();
+                loadDashboard(); // Refresh
+            } catch (error) {
+                alert("Gagal menyimpan: " + error.message);
+            }
+        };
+
+        // --- TO-DO LIST ---
+        window.switchTaskTab = (tab) => {
+            currentTaskTab = tab;
+            document.getElementById('tab-active').classList.toggle('active', tab === 'active');
+            document.getElementById('tab-done').classList.toggle('active', tab === 'done');
+            loadTasks();
+        };
+
+        window.loadTasks = async () => {
+            const q = query(
+                collection(db, "tasks"),
+                where("householdId", "==", currentHouseholdId),
+                orderBy("createdAt", "desc")
+            );
+            const snapshot = await getDocs(q);
+            const container = document.getElementById('task-list');
+            container.innerHTML = '';
+
+            let hasTasks = false;
+            snapshot.forEach(docSnap => {
+                const task = docSnap.data();
+                const isDone = task.isDone;
+                
+                // Filter berdasarkan tab
+                if (currentTaskTab === 'active' && isDone) return;
+                if (currentTaskTab === 'done' && !isDone) return;
+
+                hasTasks = true;
+                const div = document.createElement('div');
+                div.className = `task-item ${isDone ? 'done' : ''}`;
+                div.innerHTML = `
+                    <div>
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">📅 ${task.dueDate || 'Tanpa tanggal'}</div>
+                    </div>
+                    <button class="btn btn-sm ${isDone ? 'btn-outline' : 'btn-primary'}" 
+                            onclick="toggleTask('${docSnap.id}', ${!isDone})">
+                        ${isDone ? 'Batal' : 'Selesai'}
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+
+            if (!hasTasks) {
+                container.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 20px;">Tidak ada tugas di tab ini.</p>`;
+            }
+        };
+
+        window.addTask = async () => {
+            const title = document.getElementById('task-input').value.trim();
+            const dueDate = document.getElementById('task-date').value;
+            if (!title) return alert("Nama tugas tidak boleh kosong");
+
+            await addDoc(collection(db, "tasks"), {
+                householdId: currentHouseholdId,
+                title, dueDate, isDone: false,
+                createdAt: new Date().toISOString()
+            });
+            document.getElementById('task-input').value = '';
+            loadTasks();
+        };
+
+        window.toggleTask = async (taskId, newStatus) => {
+            await updateDoc(doc(db, "tasks", taskId), { isDone: newStatus });
+            loadTasks();
+        };
+
+        // Expose functions to window for HTML onclick attributes (karena type="module")
+        window.toggleAuth = toggleAuth;
+        window.register = register;
+        window.login = login;
+        window.logout = logout;
+        window.loadDashboard = loadDashboard;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.saveTransaction = saveTransaction;
+        window.switchTaskTab = switchTaskTab;
+        window.addTask = addTask;
+        window.toggleTask = toggleTask;
+    </script>
+</body>
+</html>
